@@ -1,0 +1,18 @@
+{
+    "name": "TypeScript中文文档",
+    "short_name": "TypeScriptDocs",
+    "display": "standalone",
+    "background_color": "#fff",
+    "start_url": "/learn-typescript-test/",
+    "scope": "/learn-typescript-test/",
+    "description": "TypeScript 中文文档 进阶教程",
+    "icons": [{
+      "src": "logo52.png",
+      "sizes": "52x52",
+      "type": "image/png"
+    },{
+       "src": "logo288.png",
+       "sizes": "288x288",
+       "type": "image/png"
+    }]
+  }
