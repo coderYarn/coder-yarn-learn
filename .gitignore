@@ -1,3 +1,4 @@
 node_modules
 dist
-docs/.vuepress
+docs/.vuepress/config.js
+index.html
