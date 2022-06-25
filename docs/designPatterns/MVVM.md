@@ -43,7 +43,7 @@
 接下来，我将一步一步的实现一套完整的MVVM，当再次问道MVVM相关问题，完全可以在面试过程中脱颖而出。在开始编写MVVM之前，我们很有必要对核心API和发布订阅模式熟悉一下：
 
 `注：我们这次不用 Object.defineProperty() , 用new Proxy()`
-## 介绍一下 Object.defineProperty 的使用
+## 介绍一下 new Proxy(target, handler) 的使用
 Proxy 对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、枚举、函数调用等）。
 
 ```js
