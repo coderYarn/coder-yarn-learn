@@ -6,7 +6,7 @@
 在了解MVVM之前我们首先说一下MVC,MVC架构诞生在后端并一直延续之前,一直是我们做SEO一个最佳的选择之一,因为前端页面直接存在了服务器之中。
 
 
-![MVVM1](/designPatterns/MVVM/MVVM1.jpg)
+![MVVM1](/coder-yarn-learn/designPatterns/MVVM/mvvm1.jpg)
 
 
 ### MVC分为三成架构分别是
@@ -23,7 +23,7 @@
 2. VM:*ViewModel* 视图模型（ViewModel），连接Model与View
 3. V: *View* 视图层（View），呈现给用户的DOM渲染界面
 
-![MVVM2](/designPatterns/MVVM/MVVM2.jpg)
+![MVVM2](/coder-yarn-learn/designPatterns/MVVM/mvvm2.jpg)
 
 通过上图我们可以看到*ViewModel*是MVVM中最重要的核心，它的主要作用:对View中DOM元素的监听和对Model中的数据进行绑定,当View变化了也会引起Model中的改变，Model中的数据发生变化也会触发View视图的页面重新渲染，从而达到数据双向绑定的效果，该效果也是Vue最为核心的特性。
 
@@ -44,11 +44,14 @@
 
 `注：我们这次不用 Object.defineProperty() , 用new Proxy()`
 ## 介绍一下 Object.defineProperty 的使用
-Object.defineProperty(obj, prop, desc) 的作用就是直接在一个对象上定义一个新属性，或者修改一个已经存在的属性
+Proxy 对象用于创建一个对象的代理，从而实现基本操作的拦截和自定义（如属性查找、赋值、枚举、函数调用等）。
 
-1. obj: 需要定义属性的当前对象
-2. prop: 当前需要定义的属性名
-3. desc: 属性描述符
+```js
+const p = new Proxy(target, handler)
+```
+1. *target*: 要使用 Proxy 包装的目标对象（可以是任何类型的对象，包括原生数组，函数，甚至另一个代理）。
+2. *handler*: 一个通常以函数作为属性的对象，各属性中的函数分别定义了在执行各种操作时代理 p 的行为。
+
 
 ## 实现自己的 MVVM
 要实现mvvm的双向绑定，就必须要实现以下几点
@@ -58,11 +61,11 @@ Object.defineProperty(obj, prop, desc) 的作用就是直接在一个对象上�
 3. 实现一个 - Watcher，作为连接Observer和Compile的桥梁，能够订阅并收到每个属性变动的通知，执行指令绑定的相应回调函数，从而更新视图
 4. MVVM 作为入口函数，整合以上三者
 
-![MVVM3](/designPatterns/MVVM/MVVM3.jpg)
+![MVVM3](/coder-yarn-learn/designPatterns/MVVM/mvvm3.jpg)
 
 数据劫持 - Observer
 
-`Observer 类主要目的就是给 data 数据内的所有层级的数据都进行数据劫持，让其具备监听对象属性变化的能力`
+`reactive 类主要目的就是给 data 数据内的所有层级的数据都进行数据劫持，让其具备监听对象属性变化的能力`
 【重点】:
 1. 当对象的属性值也是对象时，也要对其值进行劫持 --- 递归
 2. 当对象赋值与旧值一样，则不需要后续操作 --- 防止重复渲染
@@ -76,32 +79,30 @@ Object.defineProperty(obj, prop, desc) 的作用就是直接在一个对象上�
 3. 当模板渲染获取对象属性会调用get添加target，对象属性改动通知订阅者更新 --- 数据变化，视图更新
 
 ```js
-class Observer {
-  constructor(data){
-    this.observer(data)
+function reactive(obj) {
+  let dep = new Dep()
+  if (!isObject(obj)) {
+    return obj
   }
-  observer(data){
-    if(data && typeof data === "object"){
-      for(let key in data) {
-        this.defineReactive(data, key, data[key]);
+  const proxy = new Proxy(obj, {
+    get(target, p, receiver) {
+      let result = Reflect.get(target, p, receiver)
+      Dep.target && dep.addSub(Dep.target)
+      return isObject(result)?reactive(result):result
+    },
+    set(target, p, val, receiver) {
+      if (val !== target[p]) {
+        let result = Reflect.set(target, p, val, receiver)
+        console.log(target[p]);
+        dep.notify()
+        return result
       }
     }
-  }
-  defineReactive(obj,key,value){
-    let dep = new Dep()
-    this.observer(value)
-    Object.defineProperty(obj,key{
-      get(){
-        Dep.target && dep.addSub(Dep.target);
-        return value;
-      },
-      set(newVal){
-        if(newVal != value){
-          
-        }
-      }
-    })
-  }
+  })
+  return proxy
+}
+function isObject(value) {
+  return typeof value === 'object' && value !== null;
 }
 ```
 
@@ -117,116 +118,82 @@ Compiler 主要做了三件事：
 2. 编译 元素节点 和 文本节点
 3. 给模板中的表达式和属性添加观察者
 ```js
-const CompilerUtil = {
-  getVal(vm, expr) {
-    return expr.split('.').reduce((data, current) => {
-      return data[current];
-    }, vm.data);
-  },
-  setVal(vm, expr, value) {
-
-    expr.split('.').reduce((data, current, index, arr) => {
-      if (index === arr.length - 1) {
-        return data[current] = value;
-      }
-      return data[current]
-    }, vm.data)
-  },
-  model(node, expr, vm) {
-    let fn = this.updater['modalUpdater'];
-    new Watcher(vm, expr, (newValue) => { //给输入框加一个观察者 数据更新会触发此方法 会拿新值给 输入框赋值
-      fn(node, newValue)
-    })
-    node.addEventListener('input', e => {
-      let value = e.target.value; // 获取用户输入的内容
-      this.setVal(vm, expr, value);
-    })
-    let value = this.getVal(vm, expr);
-    fn(node, value);
-  },
-  text(node, expr, vm) {
-    let fn = this.updater['textUpdater']
-    let content = expr.replace(/\{\{(.+?)\}\}/g, (...args) => {
-      new Watcher(vm, args[1], (newValue) => {
-        fn(node, newValue)
-      })
-      return this.getVal(vm, args[1].trim());
-    })
-    fn(node, content);
-  },
-  updater: {
-    modalUpdater(node, value) {
-      node.value = value;
-    },
-    textUpdater(node, value) {
-      node.textContent = value;
-    }
-  }
-}
 class Compile {
   constructor(el, vm) {
     this.el = document.querySelector(el)
-    this.compile(this.el, vm)
-    let fragment = this.node2fragment(this.el)
-    this.el.appendChild(fragment);
+    let fragment = this.fragmentNode2(this.el)
+    this.compile(fragment, vm)
+    this.el.appendChild(fragment)
   }
-  compile(node, vm) {
-    console.log(vm);
-    const childNodes = node.childNodes;
+  compileElement(child, vm) {
+    const attributes = child.attributes;
+    [...attributes].forEach(attr => {
+      let {
+        name,
+        value
+      } = attr;
+      switch (name) {
+        case 'v-model':
+          this.disposeElement(vm, 'input', value, child, this.setVal)
+        default:
+          break;
+      }
+    })
+  }
+  compileText(child, vm) {
+    const content = child.textContent.trim();
+    if (/\{\{.+?\}\}/.test(content)) {
 
-    [...childNodes].forEach(child => {
-
+      this.disposeText(vm, content.match(/\{\{(.+?)\}\}/)[1].trim(), child)
+    }
+  }
+  disposeElement(vm, name, value, node, setVal) {
+    new Watcher(vm, value, (newValue) => {
+      node.value = newValue
+    })
+    node.addEventListener(name, function (e) {
+      setVal(vm, value, node, e.target.value)
+    })
+    node.value = this.getVal(vm, value)
+  }
+  disposeText(vm, text, node) {
+    new Watcher(vm, text, (newVal) => {
+      node.textContent = newVal
+    })
+    node.textContent = this.getVal(vm, text)
+  }
+  setVal(vm, key, node, value) {
+    vm.data[key] = value
+  }
+  getVal(vm, text) {
+    const value = text.split('.').reduce((data, current) => {
+      return data[current]
+    }, vm.data)
+    return value
+  }
+  compile(el, vm) {
+    let childrens = el.childNodes;
+    [...childrens].forEach(child => {
       if (child.nodeType === 1) {
         this.compileElement(child, vm)
         this.compile(child, vm)
       } else {
-
         this.compileText(child, vm)
       }
     })
-
   }
-  compileElement(node, vm) {
-    let attributes = node.attributes;
-    // Array.from()、[...xxx]、[].slice.call 等都可以将类数组转化为真实数组
-    [...attributes].forEach(attr => {
-      // attr格式：type="text"  v-modal="obj.name"
-      let {
-        name,
-        value: expr
-      } = attr;
-      // 判断是不是指令
-      if (this.isDirective(name)) { // v-modal v-html v-bind
-        let [, directive] = name.split('-'); // 获取指令名
-        // 需要调用不同的指令来处理
-        CompilerUtil[directive](node, expr, vm);
-      }
-    });
-
-  }
-  isDirective(attrName) {
-    return attrName.startsWith('v-'); // 是否含有v-
-  }
-  compileText(node, vm) {
-    let content = node.textContent;
-    if (/\{\{(.+?)\}\}/.test(content)) {
-
-      CompilerUtil['text'](node, content, vm);
+  fragmentNode2(el) {
+    let fragment = document.createDocumentFragment()
+    let firstChild
+    while (firstChild = el.firstChild) {
+      fragment.appendChild(firstChild)
     }
 
-
-  }
-  node2fragment(node) {
-    // 创建一个稳定碎片；目的是为了将这个节点中的每个孩子都写到这个文档碎片中
-    let fragment = document.createDocumentFragment();
-    let firstChild; // 这个节点中的第一个孩子
-    while (firstChild = node.firstChild) {
-      // appendChild具有移动性，每移动一个节点到内存中，页面上就会少一个节点
-      fragment.appendChild(firstChild);
-    }
-    return fragment;
+    return fragment
   }
 }
+
+
 ```
 
 ### 发布订阅
@@ -242,9 +209,13 @@ class Dep {
     this.observers = []
   }
   addSub(observer) {
-    this.observers.push(observer);
+    if (!this.observers.includes(observer)) {
+      this.observers.push(observer);
+    }
+
   }
   notify() {
+
     this.observers.forEach(observer => {
       observer.update()
     });
@@ -252,20 +223,21 @@ class Dep {
 }
 class Watcher {
   constructor(vm, exp, fn) {
+
     this.exp = exp
+
     this.vm = vm
     this.fn = fn;
     Dep.target = this;
   }
   update() {
-    let val = this.vm.data;
-    let arr = this.exp.split('.');
-    arr.forEach(function (k) {
-      val = val[k.trim()];
-    })
+    let val = this.exp.split('.').reduce((data,cur)=>{
+      return data[cur]
+    },this.vm.data)
     this.fn(val)
   }
 }
+
 
 ```
 Dep 和 Watcher 是简单的观察者模式的实现，Dep 即订阅者，它会管理所有的观察者，并且有给观察者发送消息的能力。Watcher 即观察者，当接收到订阅者的消息后，观察者会做出自己的更新操作。
@@ -278,8 +250,8 @@ class Mvvm {
     el,
     data
   }) {
-    new Observer(data)
-    this.data = data
+
+    this.data = reactive(data)
     new Compile(el, this)
   }
 }

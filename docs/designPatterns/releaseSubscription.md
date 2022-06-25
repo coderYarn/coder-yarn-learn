@@ -7,7 +7,7 @@
 ### 场景
 假设我们想租一个房租，我们平时嘛，肯定没有精力也没有资源去找的，然后我们就需要借助中介公司来帮助我们寻找这样的房子。我们把要求罗列出来给到房产中介，中介会整理出来，贴在一个布告栏里。这时候条件合适的房东想出租房子就会通过中介找到我们，和我们交流信息，这就是大概的流程了
 
-![ReleaseSubscription1](/designPatterns/ReleaseSubscription/ReleaseSubscription1.jpg)
+![ReleaseSubscription1](/coder-yarn-learn/designPatterns/ReleaseSubscription/ReleaseSubscription1.jpg)
 
 ## 代码实现
 

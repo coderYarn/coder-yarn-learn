@@ -12,7 +12,7 @@
 ### 假设场景
 有一位农名工是抹灰的，然后它找到了一个包工头，加入了包公头的团队。包工头就会去收集拿到农民工的手机号，下次有活的时候就会去通知这位农民工干活了。
 
-![subscriber1](/designPatterns/subscriber/subscriber1.jpg)
+![subscriber1](/coder-yarn-learn/designPatterns/subscriber/subscriber1.jpg)
 
 ## 代码实现
 
