@@ -26,13 +26,14 @@ class KoaNext {
     return this
   }
   compose() {
-    const dispatch = (index: number) => {
+  
+    const dispatch =function (this,index: number)  {
       if (index === this.middleware.length) return Promise.resolve();
       const route = this.middleware[index];
       if (!route) return Promise.resolve()
-      return Promise.resolve(route(this.ctx, () => dispatch(index + 1)));
+      return Promise.resolve(route(this.ctx, () => dispatch.call(this,(index + 1))));
     }
-    dispatch(0);
+    dispatch.call(this,0);
   }
   listen(callBack:any) {
     callBack()
@@ -42,7 +43,7 @@ class KoaNext {
 
 let koa = new KoaNext()
 let mw1 = async function (ctx, next) {
-  console.log(ctx.header);
+  console.log(ctx);
   console.log("next前,第一个中间件")
   await next()
   console.log("next后,第一个中间件")
@@ -58,5 +59,6 @@ let mw3 = async function (ctx, next) {
 koa.use(mw1).use(mw2).use(mw3).listen(() => {
   console.log("open http");
 })
+
 
 ```
