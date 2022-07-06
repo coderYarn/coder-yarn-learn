@@ -264,3 +264,62 @@ result 类型类似于：
 type result = keyof typeof UserResponse;
 // type result = "No" | "Yes"
 ```
+
+## in 操作符
+`in`操作符用于遍历目标类型的公开属性名。类似 `for .. in` 的机制。
+
+### 使用于枚举类型
+
+我们可以像下面这样使用**枚举类型**：
+
+```TypeScript
+type Property = 'name' | 'age' | 'phoneNum';
+
+type PropertyObject = {
+  [key in Property]:string 
+}
+// type PropertyObject = {
+//     name: string;
+//     age: string;
+//     phoneNum: string;
+// }
+```
+
+## is操作符
+
+`is` 操作符用于TS的类型谓词中，是实现TS类型保护的一种方式
+
+```ts
+function doSometing(value: string | number) {
+    if (typeof value === 'string') {
+        // TS 可以识别这个分支中 value 是 string 类型的参数（这就叫类型保护）
+        // do something
+    } else {
+        // TS 可以识别这个分支中 value 是 number 类型的参数
+        // do something
+    }
+}
+
+```
+
+除去上面这种方式以外，我们可以使用TS的类型谓词来实现：
+
+```ts
+/**
+ * 此函数用于判断参数 value 是不是 string 类型
+ * 
+ * 由于返回类型声明了类型谓词，可以帮助TS在代码分支中进行类型保护（默认返回 boolean 类型是没办法做到的）
+ **/
+function isString(value: any): value is string {
+    return typeof value === 'string';
+}
+
+function doSometing(value: string | number) {
+    if (isString(value)) {
+        // TS 可以识别这个分支中 value 是 string 类型的参数（这就叫类型保护）
+    } else {
+        // TS 可以识别这个分支中 value 是 number 类型的参数
+    }
+}
+
+```
